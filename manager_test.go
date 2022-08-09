@@ -25,7 +25,7 @@ func TestManager_Tick1(t *testing.T) {
 	}).Accept()
 
 	var w = &sync.WaitGroup{}
-	m.Tick(time.Second, cola.WithWaiter(w))
+	m.Tick(time.Second, func(accepts []string) {}, cola.WithWaiter(w))
 	w.Wait()
 
 	if victor != "k3" {
@@ -51,7 +51,7 @@ func TestManager_Tick2(t *testing.T) {
 	}).Reject()
 
 	var w = &sync.WaitGroup{}
-	m.Tick(time.Second, cola.WithWaiter(w))
+	m.Tick(time.Second, func(accepts []string) {}, cola.WithWaiter(w))
 	w.Wait()
 
 	if victor != "k2" {
@@ -77,7 +77,7 @@ func TestManager_Tick3(t *testing.T) {
 	})
 
 	var w = &sync.WaitGroup{}
-	m.Tick(time.Second, cola.WithWaiter(w))
+	m.Tick(time.Second, func(accepts []string) {}, cola.WithWaiter(w))
 	w.Wait()
 
 	if victor != "k1" {
@@ -103,7 +103,7 @@ func TestManager_Tick4(t *testing.T) {
 	}).Accept()
 
 	var w = &sync.WaitGroup{}
-	m.Tick(time.Second, cola.WithWaiter(w))
+	m.Tick(time.Second, func(accepts []string) {}, cola.WithWaiter(w))
 	w.Wait()
 
 	if victor != "k3" {
@@ -129,7 +129,7 @@ func TestManager_Tick5(t *testing.T) {
 	})
 
 	var w = &sync.WaitGroup{}
-	m.Tick(time.Second, cola.WithWaiter(w))
+	m.Tick(time.Second, func(accepts []string) {}, cola.WithWaiter(w))
 	w.Wait()
 
 	if victor != "" {
@@ -155,7 +155,7 @@ func TestManager_Tick6(t *testing.T) {
 	}).Reject()
 
 	var w = &sync.WaitGroup{}
-	m.Tick(time.Second, cola.WithWaiter(w))
+	m.Tick(time.Second, func(accepts []string) {}, cola.WithWaiter(w))
 	w.Wait()
 
 	if victor != "" {
@@ -174,7 +174,7 @@ func BenchmarkManager_Tick(b *testing.B) {
 		m.Add("a2", 2, func(data string) {
 		}).Accept()
 
-		m.Tick(time.Nanosecond, cola.WithWaiter(w))
+		m.Tick(time.Nanosecond, func(accepts []string) {}, cola.WithWaiter(w))
 	}
 
 	w.Wait()

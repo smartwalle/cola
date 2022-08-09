@@ -33,17 +33,17 @@ func (this *Manager[T]) Add(data T, weight int32, handler func(data T)) Action[T
 	return nAction
 }
 
-func (this *Manager[T]) Tick(timeout time.Duration, opts ...TickOption) {
+func (this *Manager[T]) Tick(timeout time.Duration, finished func(accepts []T), opts ...TickOption) {
 	var ctx, _ = context.WithTimeout(context.Background(), timeout)
-	this.tick(ctx, opts...)
+	this.tick(ctx, finished, opts...)
 }
 
-func (this *Manager[T]) TickWithDeadline(deadline time.Time, opts ...TickOption) {
+func (this *Manager[T]) TickWithDeadline(deadline time.Time, finished func(accepts []T), opts ...TickOption) {
 	var ctx, _ = context.WithDeadline(context.Background(), deadline)
-	this.tick(ctx, opts...)
+	this.tick(ctx, finished, opts...)
 }
 
-func (this *Manager[T]) tick(ctx context.Context, opts ...TickOption) {
+func (this *Manager[T]) tick(ctx context.Context, finished func([]T), opts ...TickOption) {
 	this.mu.Lock()
 	var current = this.round
 	this.round = nil
@@ -63,23 +63,16 @@ func (this *Manager[T]) tick(ctx context.Context, opts ...TickOption) {
 		}
 
 		this.task.AddTask(func(arg interface{}) {
-			current.tick(ctx, nOpt)
+			current.tick(ctx, finished, nOpt)
 		})
 	}
 }
 
 type tickOption struct {
-	finish func()
 	waiter Waiter
 }
 
 type TickOption func(opt *tickOption)
-
-func WithFinish(handler func()) TickOption {
-	return func(opt *tickOption) {
-		opt.finish = handler
-	}
-}
 
 func WithWaiter(waiter Waiter) TickOption {
 	return func(opt *tickOption) {

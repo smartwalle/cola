@@ -58,8 +58,12 @@ func (this *action[T]) Valid() bool {
 	return this.round.done == false
 }
 
-func (this *action[T]) exec() {
-	if this.handler != nil && atomic.LoadInt32(&this.status) == statusAccept {
-		this.handler(this.data)
+func (this *action[T]) exec() bool {
+	if atomic.LoadInt32(&this.status) == statusAccept {
+		if this.handler != nil {
+			this.handler(this.data)
+		}
+		return true
 	}
+	return false
 }

@@ -73,41 +73,45 @@ func (this *round[T]) add(action *action[T]) {
 	nGroup.push(action)
 }
 
-func (this *round[T]) tick(ctx context.Context, opt *tickOption) {
+func (this *round[T]) tick(ctx context.Context, finished func([]T), opt *tickOption) {
 	this.mu.Lock()
 	var total = cap(this.groups)
 	this.check = make(chan struct{}, total)
 	this.mu.Unlock()
 
+	var accepts []T
+
 	defer func() {
 		this.done = true
 		close(this.check)
-		if opt.finish != nil {
-			opt.finish()
+		if finished != nil {
+			finished(accepts)
 		}
 		if opt.waiter != nil {
 			opt.waiter.Done()
 		}
 	}()
 
-	if this.exec(false) {
+	if ok, result := this.exec(false); ok {
+		accepts = result
 		return
 	}
 
 	for {
 		select {
 		case <-ctx.Done():
-			this.exec(true)
+			_, accepts = this.exec(true)
 			return
 		case <-this.check:
-			if this.exec(false) {
+			if ok, result := this.exec(false); ok {
+				accepts = result
 				return
 			}
 		}
 	}
 }
 
-func (this *round[T]) exec(focus bool) bool {
+func (this *round[T]) exec(focus bool) (bool, []T) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
@@ -122,17 +126,20 @@ func (this *round[T]) exec(focus bool) bool {
 
 		// 如果决策未完成并且不是强制要求出结果，则直接返回
 		if done == false && focus == false {
-			return false
+			return false, nil
 		}
 
 		// 1、该组已做出所有决策，并且通过数量大于 0，则表示已决策出结果
 		// 2、强制要求出结果，并且通过数量大于 0，则表示已决策出结果
 		if g.accept > 0 && (done || focus) {
+			var accepts = make([]T, 0, g.accept)
 			for _, m := range g.actions {
-				m.exec()
+				if m.exec() {
+					accepts = append(accepts, m.Data())
+				}
 			}
-			return true
+			return true, accepts
 		}
 	}
-	return done
+	return done, nil
 }
