@@ -79,13 +79,13 @@ func (this *round[T]) tick(ctx context.Context, finished func([]T), opt *tickOpt
 	this.check = make(chan struct{}, total)
 	this.mu.Unlock()
 
-	var accepts []T
+	var victors []T
 
 	defer func() {
 		this.done = true
 		close(this.check)
 		if finished != nil {
-			finished(accepts)
+			finished(victors)
 		}
 		if opt.waiter != nil {
 			opt.waiter.Done()
@@ -93,18 +93,18 @@ func (this *round[T]) tick(ctx context.Context, finished func([]T), opt *tickOpt
 	}()
 
 	if ok, result := this.exec(false); ok {
-		accepts = result
+		victors = result
 		return
 	}
 
 	for {
 		select {
 		case <-ctx.Done():
-			_, accepts = this.exec(true)
+			_, victors = this.exec(true)
 			return
 		case <-this.check:
 			if ok, result := this.exec(false); ok {
-				accepts = result
+				victors = result
 				return
 			}
 		}
@@ -132,13 +132,13 @@ func (this *round[T]) exec(focus bool) (bool, []T) {
 		// 1、该组已做出所有决策，并且通过数量大于 0，则表示已决策出结果
 		// 2、强制要求出结果，并且通过数量大于 0，则表示已决策出结果
 		if g.accept > 0 && (done || focus) {
-			var accepts = make([]T, 0, g.accept)
+			var victors = make([]T, 0, g.accept)
 			for _, m := range g.actions {
 				if m.exec() {
-					accepts = append(accepts, m.Data())
+					victors = append(victors, m.Data())
 				}
 			}
-			return true, accepts
+			return true, victors
 		}
 	}
 	return done, nil

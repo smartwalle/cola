@@ -33,12 +33,12 @@ func (this *Manager[T]) Add(data T, weight int32, handler func(data T)) Action[T
 	return nAction
 }
 
-func (this *Manager[T]) Tick(timeout time.Duration, finished func(accepts []T), opts ...TickOption) {
+func (this *Manager[T]) Tick(timeout time.Duration, finished func(victors []T), opts ...TickOption) {
 	var ctx, _ = context.WithTimeout(context.Background(), timeout)
 	this.tick(ctx, finished, opts...)
 }
 
-func (this *Manager[T]) TickWithDeadline(deadline time.Time, finished func(accepts []T), opts ...TickOption) {
+func (this *Manager[T]) TickWithDeadline(deadline time.Time, finished func(victors []T), opts ...TickOption) {
 	var ctx, _ = context.WithDeadline(context.Background(), deadline)
 	this.tick(ctx, finished, opts...)
 }
