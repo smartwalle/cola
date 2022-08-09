@@ -4,8 +4,8 @@ import (
 	"sync/atomic"
 )
 
-type Action interface {
-	Key() string
+type Action[T any] interface {
+	Data() T
 
 	Reject()
 
@@ -20,46 +20,46 @@ const (
 	statusAccept  = 3 // 接受
 )
 
-type action struct {
+type action[T any] struct {
 	status  int32
-	key     string
+	data    T
 	weight  int32
-	round   *round
-	handler func(key string)
+	round   *round[T]
+	handler func(T)
 }
 
-func newAction(key string, weight int32, round *round, handler func(key string)) *action {
-	var a = &action{}
+func newAction[T any](data T, weight int32, round *round[T], handler func(data T)) *action[T] {
+	var a = &action[T]{}
 	a.status = statusDefault
-	a.key = key
+	a.data = data
 	a.weight = weight
 	a.round = round
 	a.handler = handler
 	return a
 }
 
-func (this *action) Key() string {
-	return this.key
+func (this *action[T]) Data() T {
+	return this.data
 }
 
-func (this *action) Reject() {
+func (this *action[T]) Reject() {
 	if atomic.CompareAndSwapInt32(&this.status, statusDefault, statusReject) {
 		this.round.finish(this.weight, statusReject)
 	}
 }
 
-func (this *action) Accept() {
+func (this *action[T]) Accept() {
 	if atomic.CompareAndSwapInt32(&this.status, statusDefault, statusAccept) {
 		this.round.finish(this.weight, statusAccept)
 	}
 }
 
-func (this *action) Valid() bool {
+func (this *action[T]) Valid() bool {
 	return this.round.done == false
 }
 
-func (this *action) exec() {
+func (this *action[T]) exec() {
 	if this.handler != nil && atomic.LoadInt32(&this.status) == statusAccept {
-		this.handler(this.key)
+		this.handler(this.data)
 	}
 }

@@ -6,26 +6,26 @@ import (
 	"sync"
 )
 
-type round struct {
+type round[T any] struct {
 	mu     *sync.Mutex
-	groups GroupList
+	groups GroupList[T]
 	check  chan struct{}
 	done   bool
 }
 
-func newRound() *round {
-	var r = &round{}
+func newRound[T any]() *round[T] {
+	var r = &round[T]{}
 	r.mu = &sync.Mutex{}
-	r.groups = make(GroupList, 0, 12)
+	r.groups = make(GroupList[T], 0, 12)
 	r.done = false
 	return r
 }
 
-func (this *round) finish(weight int32, status int32) {
+func (this *round[T]) finish(weight int32, status int32) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
-	var nGroup *group
+	var nGroup *group[T]
 	for _, g := range this.groups {
 		if g.weight == weight {
 			nGroup = g
@@ -47,7 +47,7 @@ func (this *round) finish(weight int32, status int32) {
 	}
 }
 
-func (this *round) add(action *action) {
+func (this *round[T]) add(action *action[T]) {
 	if action == nil {
 		return
 	}
@@ -55,7 +55,7 @@ func (this *round) add(action *action) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
-	var nGroup *group
+	var nGroup *group[T]
 	for _, g := range this.groups {
 		if g.weight == action.weight {
 			nGroup = g
@@ -64,7 +64,7 @@ func (this *round) add(action *action) {
 	}
 
 	if nGroup == nil {
-		nGroup = newGroup(action.weight)
+		nGroup = newGroup[T](action.weight)
 		this.groups = append(this.groups, nGroup)
 
 		sort.Sort(this.groups)
@@ -73,7 +73,7 @@ func (this *round) add(action *action) {
 	nGroup.push(action)
 }
 
-func (this *round) tick(ctx context.Context, opt *tickOption) {
+func (this *round[T]) tick(ctx context.Context, opt *tickOption) {
 	this.mu.Lock()
 	var total = cap(this.groups)
 	this.check = make(chan struct{}, total)
@@ -107,7 +107,7 @@ func (this *round) tick(ctx context.Context, opt *tickOption) {
 	}
 }
 
-func (this *round) exec(focus bool) bool {
+func (this *round[T]) exec(focus bool) bool {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
