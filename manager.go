@@ -1,0 +1,90 @@
+package cola
+
+import (
+	"context"
+	"github.com/smartwalle/task"
+	"sync"
+	"time"
+)
+
+type Manager struct {
+	mu    *sync.Mutex
+	round *round
+	task  task.Manager
+}
+
+func New() *Manager {
+	var m = &Manager{}
+	m.mu = &sync.Mutex{}
+	m.task = task.New(task.WithWorker(4))
+	m.task.Run()
+	return m
+}
+
+func (this *Manager) Add(key string, weight int32, handler func(key string)) Action {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+
+	if this.round == nil {
+		this.round = newRound()
+	}
+	var nAction = newAction(key, weight, this.round, handler)
+	this.round.add(nAction)
+	return nAction
+}
+
+func (this *Manager) Tick(timeout time.Duration, opts ...TickOption) {
+	var ctx, _ = context.WithTimeout(context.Background(), timeout)
+	this.tick(ctx, opts...)
+}
+
+func (this *Manager) TickWithDeadline(deadline time.Time, opts ...TickOption) {
+	var ctx, _ = context.WithDeadline(context.Background(), deadline)
+	this.tick(ctx, opts...)
+}
+
+func (this *Manager) tick(ctx context.Context, opts ...TickOption) {
+	this.mu.Lock()
+	var current = this.round
+	this.round = nil
+	this.mu.Unlock()
+
+	if current != nil {
+		var nOpt = &tickOption{}
+		nOpt.context = ctx
+
+		for _, opt := range opts {
+			if opt != nil {
+				opt(nOpt)
+			}
+		}
+
+		if nOpt.waiter != nil {
+			nOpt.waiter.Add(1)
+		}
+
+		this.task.AddTask(func(arg interface{}) {
+			current.tick(nOpt)
+		})
+	}
+}
+
+type tickOption struct {
+	context context.Context
+	finish  func()
+	waiter  Waiter
+}
+
+type TickOption func(opt *tickOption)
+
+func WithFinish(handler func()) TickOption {
+	return func(opt *tickOption) {
+		opt.finish = handler
+	}
+}
+
+func WithWaiter(waiter Waiter) TickOption {
+	return func(opt *tickOption) {
+		opt.waiter = waiter
+	}
+}
