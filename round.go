@@ -7,7 +7,7 @@ import (
 
 type round struct {
 	mu     *sync.Mutex
-	groups []*group
+	groups GroupList
 	check  chan struct{}
 	done   bool
 }
@@ -15,7 +15,7 @@ type round struct {
 func newRound() *round {
 	var r = &round{}
 	r.mu = &sync.Mutex{}
-	r.groups = make([]*group, 0, 12)
+	r.groups = make(GroupList, 0, 12)
 	r.done = false
 	return r
 }
@@ -66,7 +66,7 @@ func (this *round) add(action *action) {
 		nGroup = newGroup(action.weight)
 		this.groups = append(this.groups, nGroup)
 
-		sort.Sort(GroupList(this.groups))
+		sort.Sort(this.groups)
 	}
 
 	nGroup.push(action)
@@ -110,24 +110,28 @@ func (this *round) exec(focus bool) bool {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
+	var done = false
+
 	for _, g := range this.groups {
 		var finish = g.accept + g.reject
 		var total = len(g.actions)
 
+		// 所有决策是否已经完成
+		done = finish == total
+
 		// 如果决策未完成并且不是强制要求出结果，则直接返回
-		if finish < total && focus == false {
+		if done == false && focus == false {
 			return false
 		}
 
 		// 1、该组已做出所有决策，并且通过数量大于 0，则表示已决策出结果
 		// 2、强制要求出结果，并且通过数量大于 0，则表示已决策出结果
-		if (finish == total && g.accept > 0) || (focus && g.accept > 0) {
-			//sort.Sort(ActionList(g.actions))
+		if g.accept > 0 && (done || focus) {
 			for _, m := range g.actions {
 				m.exec()
 			}
 			return true
 		}
 	}
-	return false
+	return done
 }

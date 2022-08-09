@@ -63,23 +63,3 @@ func (this *action) exec() {
 		this.handler(this.key)
 	}
 }
-
-//type ActionList []*action
-//
-//func (this ActionList) Len() int {
-//	return len(this)
-//}
-//
-//func (this ActionList) Less(i, j int) bool {
-//	var a = this[i]
-//	var b = this[j]
-//
-//	if a.status > b.status {
-//		return true
-//	}
-//	return false
-//}
-//
-//func (this ActionList) Swap(i, j int) {
-//	this[i], this[j] = this[j], this[i]
-//}
