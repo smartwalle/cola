@@ -1,6 +1,7 @@
 package cola
 
 import (
+	"context"
 	"sort"
 	"sync"
 )
@@ -72,7 +73,7 @@ func (this *round) add(action *action) {
 	nGroup.push(action)
 }
 
-func (this *round) tick(opt *tickOption) {
+func (this *round) tick(ctx context.Context, opt *tickOption) {
 	this.mu.Lock()
 	var total = cap(this.groups)
 	this.check = make(chan struct{}, total)
@@ -95,7 +96,7 @@ func (this *round) tick(opt *tickOption) {
 
 	for {
 		select {
-		case <-opt.context.Done():
+		case <-ctx.Done():
 			this.exec(true)
 			return
 		case <-this.check:

@@ -51,7 +51,6 @@ func (this *Manager) tick(ctx context.Context, opts ...TickOption) {
 
 	if current != nil {
 		var nOpt = &tickOption{}
-		nOpt.context = ctx
 
 		for _, opt := range opts {
 			if opt != nil {
@@ -64,15 +63,14 @@ func (this *Manager) tick(ctx context.Context, opts ...TickOption) {
 		}
 
 		this.task.AddTask(func(arg interface{}) {
-			current.tick(nOpt)
+			current.tick(ctx, nOpt)
 		})
 	}
 }
 
 type tickOption struct {
-	context context.Context
-	finish  func()
-	waiter  Waiter
+	finish func()
+	waiter Waiter
 }
 
 type TickOption func(opt *tickOption)
