@@ -50,7 +50,7 @@ func (this *Manager[T]) tick(ctx context.Context, finished func([]T), opts ...Ti
 	this.mu.Unlock()
 
 	if current != nil {
-		var nOpt = &tickOption{}
+		var nOpt = &TickOptions{}
 
 		for _, opt := range opts {
 			if opt != nil {
@@ -68,14 +68,14 @@ func (this *Manager[T]) tick(ctx context.Context, finished func([]T), opts ...Ti
 	}
 }
 
-type tickOption struct {
+type TickOptions struct {
 	waiter Waiter
 }
 
-type TickOption func(opt *tickOption)
+type TickOption func(opt *TickOptions)
 
 func WithWaiter(waiter Waiter) TickOption {
-	return func(opt *tickOption) {
+	return func(opt *TickOptions) {
 		opt.waiter = waiter
 	}
 }
