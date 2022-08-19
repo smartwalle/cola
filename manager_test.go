@@ -203,6 +203,7 @@ func BenchmarkManager_Tick(b *testing.B) {
 	var m = cola.New[string]()
 	var w = &sync.WaitGroup{}
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		m.Add("a1", 1, func(data string) {
 		}).Accept()

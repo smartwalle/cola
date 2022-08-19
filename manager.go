@@ -72,10 +72,10 @@ type TickOptions struct {
 	waiter Waiter
 }
 
-type TickOption func(opt *TickOptions)
+type TickOption func(opts *TickOptions)
 
 func WithWaiter(waiter Waiter) TickOption {
-	return func(opt *TickOptions) {
-		opt.waiter = waiter
+	return func(opts *TickOptions) {
+		opts.waiter = waiter
 	}
 }
