@@ -73,7 +73,7 @@ func (this *round[T]) add(action *action[T]) {
 	nGroup.push(action)
 }
 
-func (this *round[T]) tick(ctx context.Context, finished func([]T), opt *TickOptions) {
+func (this *round[T]) tick(ctx context.Context, finished func([]T)) {
 	this.mu.Lock()
 	var total = cap(this.groups)
 	this.check = make(chan struct{}, total)
@@ -86,9 +86,6 @@ func (this *round[T]) tick(ctx context.Context, finished func([]T), opt *TickOpt
 		close(this.check)
 		if finished != nil {
 			finished(victors)
-		}
-		if opt.waiter != nil {
-			opt.waiter.Done()
 		}
 	}()
 

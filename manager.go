@@ -67,7 +67,11 @@ func (this *Manager[T]) tick(ctx context.Context, finished func([]T), opts ...Ti
 		}
 
 		var err = this.task.AddTask(func(arg interface{}) {
-			current.tick(ctx, finished, nOpts)
+			current.tick(ctx, finished)
+
+			if nOpts.waiter != nil {
+				nOpts.waiter.Done()
+			}
 		})
 
 		if err != nil && nOpts.waiter != nil {
