@@ -33,21 +33,21 @@ func (this *Manager[T]) Add(data T, weight int32, handler func(data T)) Action[T
 	return nAction
 }
 
-func (this *Manager[T]) Tick(timeout time.Duration, finished func(victors []T), opts ...TickOption) {
+func (this *Manager[T]) Tick(timeout time.Duration, finished func(victors []T), opts ...TickOption) error {
 	var ctx, _ = context.WithTimeout(context.Background(), timeout)
-	this.tick(ctx, finished, opts...)
+	return this.tick(ctx, finished, opts...)
 }
 
-func (this *Manager[T]) TickWithDeadline(deadline time.Time, finished func(victors []T), opts ...TickOption) {
+func (this *Manager[T]) TickWithDeadline(deadline time.Time, finished func(victors []T), opts ...TickOption) error {
 	var ctx, _ = context.WithDeadline(context.Background(), deadline)
-	this.tick(ctx, finished, opts...)
+	return this.tick(ctx, finished, opts...)
 }
 
 func (this *Manager[T]) Close() {
 	this.task.Close()
 }
 
-func (this *Manager[T]) tick(ctx context.Context, finished func([]T), opts ...TickOption) {
+func (this *Manager[T]) tick(ctx context.Context, finished func([]T), opts ...TickOption) error {
 	this.mu.Lock()
 	var current = this.round
 	this.round = nil
@@ -66,10 +66,17 @@ func (this *Manager[T]) tick(ctx context.Context, finished func([]T), opts ...Ti
 			nOpts.waiter.Add(1)
 		}
 
-		this.task.AddTask(func(arg interface{}) {
+		var err = this.task.AddTask(func(arg interface{}) {
 			current.tick(ctx, finished, nOpts)
 		})
+
+		if err != nil && nOpts.waiter != nil {
+			nOpts.waiter.Done()
+		}
+
+		return err
 	}
+	return nil
 }
 
 type TickOptions struct {
