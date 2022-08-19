@@ -43,6 +43,10 @@ func (this *Manager[T]) TickWithDeadline(deadline time.Time, finished func(victo
 	this.tick(ctx, finished, opts...)
 }
 
+func (this *Manager[T]) Close() {
+	this.task.Close()
+}
+
 func (this *Manager[T]) tick(ctx context.Context, finished func([]T), opts ...TickOption) {
 	this.mu.Lock()
 	var current = this.round

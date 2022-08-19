@@ -33,6 +33,7 @@ func TestManager_Mahjong(t *testing.T) {
 	var w = &sync.WaitGroup{}
 	m.Tick(time.Second*10, func(victors []*Mahjong) {}, cola.WithWaiter(w))
 	w.Wait()
+	m.Close()
 
 	if victor != "gang" {
 		t.Fatal("期望值是: gang, 实际值是:", victor)
@@ -63,6 +64,7 @@ func TestManager_Tick1(t *testing.T) {
 	var w = &sync.WaitGroup{}
 	m.Tick(time.Second, func(victors []string) {}, cola.WithWaiter(w))
 	w.Wait()
+	m.Close()
 
 	if victor != "k3" {
 		t.Fatal("期望值是: k3, 实际值是:", victor)
@@ -89,6 +91,7 @@ func TestManager_Tick2(t *testing.T) {
 	var w = &sync.WaitGroup{}
 	m.Tick(time.Second, func(victors []string) {}, cola.WithWaiter(w))
 	w.Wait()
+	m.Close()
 
 	if victor != "k2" {
 		t.Fatal("期望值是: k2, 实际值是:", victor)
@@ -115,6 +118,7 @@ func TestManager_Tick3(t *testing.T) {
 	var w = &sync.WaitGroup{}
 	m.Tick(time.Second, func(victors []string) {}, cola.WithWaiter(w))
 	w.Wait()
+	m.Close()
 
 	if victor != "k1" {
 		t.Fatal("期望值是: k1, 实际值是:", victor)
@@ -141,6 +145,7 @@ func TestManager_Tick4(t *testing.T) {
 	var w = &sync.WaitGroup{}
 	m.Tick(time.Second, func(victors []string) {}, cola.WithWaiter(w))
 	w.Wait()
+	m.Close()
 
 	if victor != "k3" {
 		t.Fatal("期望值是: k3, 实际值是:", victor)
@@ -167,6 +172,7 @@ func TestManager_Tick5(t *testing.T) {
 	var w = &sync.WaitGroup{}
 	m.Tick(time.Second, func(victors []string) {}, cola.WithWaiter(w))
 	w.Wait()
+	m.Close()
 
 	if victor != "" {
 		t.Fatal("期望值是: , 实际值是:", victor)
@@ -193,6 +199,7 @@ func TestManager_Tick6(t *testing.T) {
 	var w = &sync.WaitGroup{}
 	m.Tick(time.Second, func(victors []string) {}, cola.WithWaiter(w))
 	w.Wait()
+	m.Close()
 
 	if victor != "" {
 		t.Fatal("期望值是: , 实际值是:", victor)
@@ -215,4 +222,5 @@ func BenchmarkManager_Tick(b *testing.B) {
 	}
 
 	w.Wait()
+	m.Close()
 }
