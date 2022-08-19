@@ -50,20 +50,20 @@ func (this *Manager[T]) tick(ctx context.Context, finished func([]T), opts ...Ti
 	this.mu.Unlock()
 
 	if current != nil {
-		var nOpt = &TickOptions{}
+		var nOpts = &TickOptions{}
 
 		for _, opt := range opts {
 			if opt != nil {
-				opt(nOpt)
+				opt(nOpts)
 			}
 		}
 
-		if nOpt.waiter != nil {
-			nOpt.waiter.Add(1)
+		if nOpts.waiter != nil {
+			nOpts.waiter.Add(1)
 		}
 
 		this.task.AddTask(func(arg interface{}) {
-			current.tick(ctx, finished, nOpt)
+			current.tick(ctx, finished, nOpts)
 		})
 	}
 }
