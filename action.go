@@ -21,11 +21,11 @@ const (
 )
 
 type action[T any] struct {
-	status  int32
 	data    T
-	weight  int32
 	round   *round[T]
 	handler func(T)
+	status  int32
+	weight  int32
 }
 
 func newAction[T any](data T, weight int32, round *round[T], handler func(data T)) *action[T] {

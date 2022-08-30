@@ -8,8 +8,8 @@ import (
 
 type round[T any] struct {
 	mu     *sync.Mutex
-	groups GroupList[T]
 	check  chan struct{}
+	groups GroupList[T]
 	done   bool
 }
 

@@ -1,10 +1,10 @@
 package cola
 
 type group[T any] struct {
-	weight  int32 // 权重
-	reject  int   // 拒绝数量
-	accept  int   // 接受数量
 	actions []*action[T]
+	reject  int
+	accept  int
+	weight  int32
 }
 
 func newGroup[T any](weight int32) *group[T] {
