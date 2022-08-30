@@ -7,9 +7,9 @@ import (
 )
 
 type round[T any] struct {
-	mu     sync.Mutex
 	check  chan struct{}
 	groups GroupList[T]
+	mu     sync.Mutex
 	done   bool
 }
 
