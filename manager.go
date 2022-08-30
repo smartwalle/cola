@@ -8,13 +8,14 @@ import (
 )
 
 type Manager[T any] struct {
-	task  task.Manager
+	mu    *sync.Mutex
 	round *round[T]
-	mu    sync.Mutex
+	task  task.Manager
 }
 
 func New[T any]() *Manager[T] {
 	var m = &Manager[T]{}
+	m.mu = &sync.Mutex{}
 	m.task = task.New(task.WithWorker(2))
 	m.task.Run()
 	return m
