@@ -7,15 +7,14 @@ import (
 )
 
 type round[T any] struct {
-	mu     *sync.Mutex
-	groups GroupList[T]
 	check  chan struct{}
+	groups GroupList[T]
+	mu     sync.Mutex
 	done   bool
 }
 
 func newRound[T any]() *round[T] {
 	var r = &round[T]{}
-	r.mu = &sync.Mutex{}
 	r.groups = make(GroupList[T], 0, 12)
 	r.done = false
 	return r
